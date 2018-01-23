@@ -11,8 +11,6 @@
         "kitetail/zttp": "^0.3.0"
     },
     "require-dev": {
-        "fzaninotto/faker": "~1.4",
-        "mockery/mockery": "0.9.*",
         "vlucas/phpdotenv": "^2.4",
         "phpunit/phpunit": "~5.7"
     },
