@@ -8,7 +8,7 @@ use Zttp\Zttp;
 
 class Auth
 {
-    protected $sageLogin = "https://login.salesforce.com";
+    protected $sageAuthUrl = "";
     protected $client_id;
     protected $client_secret;
 
@@ -16,15 +16,16 @@ class Auth
     public $refresh_token;
     public $instance_url;
 
-    public function __construct($client_id, $client_secret)
+    public function __construct($sageAuthUrl, $client_id, $client_secret)
     {
+        $this->sageAuthUrl      = $sageAuthUrl;
         $this->client_id        = $client_id;
         $this->client_secret    = $client_secret;
     }
 
     public function loginBasic($username, $password, $securityToken)
     {
-        return $this->parseResponse(Zttp::asFormParams()->post("{$this->sageLogin}/services/oauth2/token", [
+        return $this->parseResponse(Zttp::asFormParams()->post("{$this->sageAuthUrl}/token", [
             "grant_type"    => 'password',
             "client_id"     => $this->client_id,
             "client_secret" => $this->client_secret,
@@ -35,13 +36,13 @@ class Auth
 
     public function oAuth2Login($redirect_uri)
     {
-        header("Location: {$this->sageLogin}/services/oauth2/authorize?response_type=code&client_id={$this->client_id}&redirect_uri={$redirect_uri}");
+        header("Location: {$this->sageAuthUrl}/authorize?response_type=code&client_id={$this->client_id}&redirect_uri={$redirect_uri}");
         exit();
     }
 
     public function loginCallback($redirect_uri, $code)
     {
-        return $this->parseResponse(Zttp::asFormParams()->post("{$this->sageLogin}/services/oauth2/token", [
+        return $this->parseResponse(Zttp::asFormParams()->post("{$this->sageAuthUrl}/token", [
             "grant_type"    => "authorization_code",
             "client_id"     => $this->client_id,
             "client_secret" => $this->client_secret,
@@ -76,7 +77,7 @@ class Auth
 
     public function refreshToken()
     {
-        return $this->parseResponse(Zttp::asFormParams()->post($this->sageLogin . "/services/oauth2/token", [
+        return $this->parseResponse(Zttp::asFormParams()->post("{$this->sageAuthUrl}/token", [
             "grant_type"    => 'refresh_token',
             "client_id"     => $this->client_id,
             "client_secret" => $this->client_secret,
