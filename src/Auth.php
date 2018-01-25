@@ -6,26 +6,27 @@ use Illuminate\Http\Response;
 use RevoSystems\SageApi\Exceptions\WrongSageAccessTokenException;
 use Zttp\Zttp;
 
-class Auth
+class Auth implements OAuth
 {
-    protected $sageAuthUrl = "";
-    protected $client_id;
-    protected $client_secret;
-
     public $access_token;
     public $refresh_token;
     public $instance_url;
 
-    public function __construct($sageAuthUrl, $client_id, $client_secret)
+    protected $authUrl  = "https://login.salesforce.com/services/oauth2/authorize";
+    protected $tokenUrl = "https://login.salesforce.com/services/oauth2/token";
+
+    private $client_id;
+    private $client_secret;
+
+    public function __construct($client_id, $client_secret)
     {
-        $this->sageAuthUrl      = $sageAuthUrl;
         $this->client_id        = $client_id;
         $this->client_secret    = $client_secret;
     }
 
     public function loginBasic($username, $password, $securityToken)
     {
-        return $this->parseResponse(Zttp::asFormParams()->post("{$this->sageAuthUrl}/token", [
+        return $this->parseResponse(Zttp::asFormParams()->post($this->tokenUrl, [
             "grant_type"    => 'password',
             "client_id"     => $this->client_id,
             "client_secret" => $this->client_secret,
@@ -36,13 +37,23 @@ class Auth
 
     public function oAuth2Login($redirect_uri)
     {
-        header("Location: {$this->sageAuthUrl}/authorize?response_type=code&client_id={$this->client_id}&redirect_uri={$redirect_uri}");
+        header("Location: {$this->authUrl}?response_type=code&client_id={$this->client_id}&redirect_uri={$redirect_uri}");
         exit();
+    }
+
+    public function refreshToken()
+    {
+        return $this->parseResponse(Zttp::asFormParams()->post($this->tokenUrl, [
+            "grant_type"    => 'refresh_token',
+            "client_id"     => $this->client_id,
+            "client_secret" => $this->client_secret,
+            "refresh_token" => $this->refresh_token,
+        ]));
     }
 
     public function loginCallback($redirect_uri, $code)
     {
-        return $this->parseResponse(Zttp::asFormParams()->post("{$this->sageAuthUrl}/token", [
+        return $this->parseResponse(Zttp::asFormParams()->post($this->tokenUrl, [
             "grant_type"    => "authorization_code",
             "client_id"     => $this->client_id,
             "client_secret" => $this->client_secret,
@@ -51,21 +62,14 @@ class Auth
         ]));
     }
 
-    public function setAuthTokens($access_token, $instance_url, $refresh_token = "")
+    public function setAuthKeys($basics, $extras = [])
     {
-        $this->access_token     = $access_token;
-        $this->instance_url     = $instance_url;
-        $this->refresh_token    = $refresh_token;
+        $this->access_token     = $basics["access_token"];
+        $this->refresh_token    = $basics["refresh_token"] ?? "";
+        collect($extras)->each(function ($extra, $key) {
+            $this->$key = $extra;
+        });
         return $this;
-    }
-
-    private function parseResponse($response)
-    {
-        if ($response->status() != Response::HTTP_OK) {
-            throw new WrongSageAccessTokenException();
-        }
-        $response = $response->json();
-        return $this->setAuthTokens($response["access_token"], $response["instance_url"], $response["refresh_token"] ?? "");
     }
 
     public function getAuthHeaders()
@@ -75,13 +79,11 @@ class Auth
         ];
     }
 
-    public function refreshToken()
+    protected function parseResponse($response)
     {
-        return $this->parseResponse(Zttp::asFormParams()->post("{$this->sageAuthUrl}/token", [
-            "grant_type"    => 'refresh_token',
-            "client_id"     => $this->client_id,
-            "client_secret" => $this->client_secret,
-            "refresh_token" => $this->refresh_token,
-        ]));
+        if ($response->status() != Response::HTTP_OK) {
+            throw new WrongSageAccessTokenException();
+        }
+        return $this->setAuthKeys($response->json(), array_except($response->json(), ["client_id", "client_secret"]));
     }
 }

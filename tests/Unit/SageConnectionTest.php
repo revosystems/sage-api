@@ -9,7 +9,6 @@ use RevoSystems\SageApi\Api;
 
 class SageConnectionTest extends TestCase
 {
-    const SAGE_URL = "https://login.salesforce.com/services/oauth2";
     protected $api;
 
     public function setUp()
@@ -22,7 +21,7 @@ class SageConnectionTest extends TestCase
     public function getSageApi()
     {
         if (! $this->api) {
-            $this->api = new Api(new Auth(static::SAGE_URL, getenv('CLIENT_ID'), getenv('CLIENT_SECRET')));
+            $this->api = new Api(new Auth(getenv('CLIENT_ID'), getenv('CLIENT_SECRET')));
         }
         return $this->api;
     }

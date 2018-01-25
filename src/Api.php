@@ -23,17 +23,6 @@ class Api
         return $response instanceof ZttpResponse ? $response->json() : null;
     }
 
-    public function findByUID($resource, $uid, $fields = ["Id", "Name"])
-    {
-        try {
-            return Zttp::withHeaders($this->auth->getAuthHeaders())
-                ->get($this->urlForQueries() . "?q=SELECT+" . $this->getCollection($fields) . "+from+{$resource}+WHERE+s2cor__UID__c+LIKE+'{$uid}'+AND+isDeleted+=+false")
-                ->json();
-        } catch (\Exception $e) {
-            $this->log("SAGE-API: Failed to find resource {$resource} with uid {$uid}: {$e->getMessage()}");
-        }
-    }
-
     public function get($resource, $fields = ["Id", "Name"], $query = '')
     {
         return Zttp::withHeaders($this->auth->getAuthHeaders())
@@ -60,7 +49,7 @@ class Api
         return $this->call('delete', $this->urlForResource("{$resource}/{$id}"));
     }
 
-    private function call($method, $url, $data = null)
+    protected function call($method, $url, $data = null)
     {
         $response = Zttp::withHeaders($this->auth->getAuthHeaders())->$method($url, $data);
         $status   = $response->status();
@@ -74,22 +63,22 @@ class Api
         return $response;
     }
 
-    private function urlForResource($resource)
+    protected function urlForResource($resource)
     {
         return "{$this->auth->instance_url}/services/data/v40.0/sobjects/{$resource}";
     }
 
-    private function urlForQueries()
+    protected function urlForQueries()
     {
         return "{$this->auth->instance_url}/services/data/v40.0/query/";
     }
 
-    private function log($message)
+    protected function log($message)
     {
         array_push($this->log, $message);
     }
 
-    private function getCollection($fields)
+    protected function getCollection($fields)
     {
         return ($fields instanceof Collection ? $fields->keys() : collect($fields))->implode(',');
     }
