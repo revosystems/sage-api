@@ -12,6 +12,8 @@ class Api
     public $log      = [];
     public $auth;
 
+    const PATCH_METHOD = 'patch';
+
     public function __construct(Auth $auth)
     {
         $this->auth         = $auth;
@@ -40,7 +42,7 @@ class Api
     public function patch($resource, $id, $data)
     {
         $data     = $data instanceof Collection ? $data->toArray() : $data;
-        $response = $this->call('patch', $this->urlForResource("{$resource}/{$id}"), $data);
+        $response = $this->call(static::PATCH_METHOD, $this->urlForResource("{$resource}/{$id}"), $data);
         return $response instanceof ZttpResponse ? $response->json() : false;
     }
 
@@ -57,7 +59,7 @@ class Api
             $this->auth->refreshToken();
             return $this->call($method, $url, $data);
         } elseif ($status < Response::HTTP_OK || $status > Response::HTTP_NO_CONTENT) {
-            $this->log("SAGE-API: Failed to {$method} resource with error {$status}: {$response->body()}");
+            $this->log("SAGE: Failed to {$method} resource with error {$status}: {$response->body()}");
             return false;
         }
         return $response;
