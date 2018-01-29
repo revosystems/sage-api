@@ -27,9 +27,8 @@ class Api
 
     public function get($resource, $fields = ["Id", "Name"], $query = '')
     {
-        return Zttp::withHeaders($this->auth->getAuthHeaders())
-            ->get($this->urlForQueries() . "?q=SELECT+" . $this->getCollection($fields) . "+from+{$resource}+WHERE+isDeleted+=+false{$query}")
-            ->json();
+        $response = $this->call('get', $this->urlForQueries() . "?q=SELECT+" . $this->getCollection($fields) . "+from+{$resource}+WHERE+isDeleted+=+false{$query}");
+        return $response instanceof ZttpResponse ? $response->json() : null;
     }
 
     public function post($resource, $data)

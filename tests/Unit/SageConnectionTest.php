@@ -21,7 +21,7 @@ class SageConnectionTest extends TestCase
     public function getSageApi()
     {
         if (! $this->api) {
-            $this->api = new Api(new Auth(getenv('CLIENT_ID'), getenv('CLIENT_SECRET')));
+            $this->api = new Api(new Auth(getenv('SAGE_CLIENT_ID'), getenv('SAGE_CLIENT_SECRET')));
         }
         return $this->api;
     }
