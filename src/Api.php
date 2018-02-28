@@ -58,7 +58,10 @@ class Api
             $this->auth->refreshToken();
             return $this->call($method, $url, $data);
         } elseif ($status < Response::HTTP_OK || $status > Response::HTTP_NO_CONTENT) {
-            $this->log("Failed to {$method} resource with error {$status}: {$response->body()}");
+            $this->log([
+                "message"   => '{"method":"' . $method . '","status":"' . $status . '","body":' . $response->body() . '}',
+                "model"     => $url
+            ]);
             return false;
         }
         return $response;
