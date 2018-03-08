@@ -25,7 +25,7 @@ class Api
         return $response instanceof ZttpResponse ? $response->json() : null;
     }
 
-    public function get($resource, $fields = ["Id", "Name"], $query = '')
+    public function get($resource, $query = '', $fields = ["Id", "Name"])
     {
         $response = $this->call('get', $this->urlForQueries() . "?q=SELECT+" . $this->getCollection($fields) . "+from+{$resource}+WHERE+isDeleted+=+false{$query}");
         return $response instanceof ZttpResponse ? $response->json() : null;
